@@ -24,7 +24,7 @@ local PanelDistance = 8
 local GlobalEnvironment = (getgenv and getgenv()) or shared
 
 local Part = Instance.new("Part")
-Part.Name = "3DianSurfacePanel"
+Part.Name = "3DianPanel"
 Part.Anchored = true
 Part.CanCollide = false
 Part.CanTouch = false
@@ -38,9 +38,13 @@ Part.Size = Vector3.new(CanvasWidth / PixelsPerStud, CanvasHeight / PixelsPerStu
 Part.CFrame = CFrame.lookAt(Root.Position + Root.CFrame.LookVector * PanelDistance, Root.Position)
 Part.Parent = workspace
 
-GlobalEnvironment.Obsidian3DSurfaceConfig = {
+GlobalEnvironment.Obsidian3DConfig = {
     Adornee = Part,
     Distance = PanelDistance,
+    Use3D = true,
+    MovingToCamera = false,
+    CameraFollowSpeed = 18,
+    CameraFollowSmoothness = 65,
     Face = Enum.NormalId.Front,
     CanvasSize = Vector2.new(CanvasWidth, CanvasHeight),
     PixelsPerStud = PixelsPerStud,
@@ -51,6 +55,9 @@ GlobalEnvironment.Obsidian3DSurfaceConfig = {
     AlwaysOnTop = true,
     MaxDistance = 100,
 }
+if GlobalEnvironment.Obsidian3DConfig.Use3D == false then
+    Part.LocalTransparencyModifier = 1
+end
 
 local Repository = "https://github.com/socoolkka/3dian/raw/refs/heads/main/"
 
@@ -825,6 +832,62 @@ MenuGroup:AddToggle("ShowCustomCursor", {
 		Library.ShowCustomCursor = Value
 	end,
 })
+MenuGroup:AddToggle("Use3D", {
+	Text = "3D Mode",
+	Tooltip = "Turn off to show a movable 2D window.",
+	Default = GlobalEnvironment.Obsidian3DConfig.Use3D ~= false,
+	Callback = function(Value)
+		local Success = Window:Set3DMode(Value)
+		if not Success then
+			Library:Notify({
+				Title = "3D Mode",
+				Description = "Unable to change the display mode.",
+				Time = 3,
+			})
+		end
+	end,
+})
+MenuGroup:AddToggle("MovingToCamera", {
+	Text = "Moving To Camera",
+	Tooltip = "Attach the 3D panel to the camera.",
+	Default = GlobalEnvironment.Obsidian3DConfig.MovingToCamera,
+	Callback = function(Value)
+		GlobalEnvironment.Obsidian3DConfig.MovingToCamera = Value
+	end,
+})
+MenuGroup:AddSlider("CameraFollowSpeed", {
+	Text = "Camera Follow Speed",
+	Tooltip = "Higher values make the panel catch up faster.",
+	Default = GlobalEnvironment.Obsidian3DConfig.CameraFollowSpeed,
+	Min = 1,
+	Max = 60,
+	Rounding = 0,
+	Callback = function(Value)
+		GlobalEnvironment.Obsidian3DConfig.CameraFollowSpeed = Value
+	end,
+})
+MenuGroup:AddSlider("CameraFollowSmoothness", {
+	Text = "Camera Follow Smoothness",
+	Tooltip = "Higher values make camera movement smoother but add more follow lag.",
+	Default = GlobalEnvironment.Obsidian3DConfig.CameraFollowSmoothness,
+	Min = 0,
+	Max = 95,
+	Rounding = 0,
+	Callback = function(Value)
+		GlobalEnvironment.Obsidian3DConfig.CameraFollowSmoothness = Value
+	end,
+})
+MenuGroup:AddSlider("CameraFollowDistance", {
+	Text = "Camera Distance",
+	Tooltip = "Sets the panel distance from the camera while following.",
+	Default = GlobalEnvironment.Obsidian3DConfig.Distance,
+	Min = 2,
+	Max = 30,
+	Rounding = 1,
+	Callback = function(Value)
+		GlobalEnvironment.Obsidian3DConfig.Distance = Value
+	end,
+})
 MenuGroup:AddToggle("AlwaysOnTop", {
 	Text = "Always On Top",
 	Default = Window.AlwaysOnTop,
@@ -896,7 +959,7 @@ SaveManager:LoadAutoloadConfig()
 
 Library:Notify({
     Title = "3Dian Example",
-    Description = "The SurfaceGui panel and screen overlay are ready.",
+    Description = "The 3D panel and screen overlay are ready.",
     Time = 5,
 })
 
@@ -912,8 +975,8 @@ local function CleanupExample()
     if Part and Part.Parent then
         Part:Destroy()
     end
-    if GlobalEnvironment.Obsidian3DSurfaceConfig then
-        GlobalEnvironment.Obsidian3DSurfaceConfig = nil
+    if GlobalEnvironment.Obsidian3DConfig then
+        GlobalEnvironment.Obsidian3DConfig = nil
     end
 end
 
